@@ -26,7 +26,8 @@ export default function Results() {
 
     const fetchResults = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/api/history');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await axios.get(`${apiUrl}/api/history`);
         const item = res.data.find(d => d.id === fileId);
         
         if (item) {

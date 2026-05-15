@@ -52,7 +52,8 @@ export default function Upload() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const uploadRes = await axios.post('http://localhost:8000/api/upload', formData, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const uploadRes = await axios.post(`${apiUrl}/api/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -62,7 +63,7 @@ export default function Upload() {
       const analyzeData = new FormData();
       analyzeData.append('filename', file.name);
       
-      const analyzeRes = await axios.post(`http://localhost:8000/api/analyze/${fileId}`, analyzeData);
+      const analyzeRes = await axios.post(`${apiUrl}/api/analyze/${fileId}`, analyzeData);
       
       toast.success('Analysis complete!', { id: toastId });
       navigate(`/results/${fileId}`, { state: { resultData: analyzeRes.data, filename: file.name } });
