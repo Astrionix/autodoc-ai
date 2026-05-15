@@ -13,6 +13,9 @@ from app.services.supabase_service import supabase
 
 router = APIRouter()
 
+UPLOAD_DIR = "/tmp/uploads" if os.environ.get("VERCEL") else "uploads"
+HISTORY_FILE = "/tmp/history.json" if os.environ.get("VERCEL") else "history.json"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 class AnalysisResponse(BaseModel):
@@ -35,7 +38,7 @@ async def upload_document(file: UploadFile = File(...)):
     file_id = str(uuid.uuid4())
     ext = os.path.splitext(file.filename)[1]
     saved_filename = f"{file_id}{ext}"
-    file_path = os.path.join("uploads", saved_filename)
+    file_path = os.path.join(UPLOAD_DIR, saved_filename)
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -44,11 +47,11 @@ async def upload_document(file: UploadFile = File(...)):
 
 @router.post("/analyze/{file_id}", response_model=AnalysisResponse)
 async def analyze_document(file_id: str, filename: Optional[str] = Form(None)):
-    matched_files = [f for f in os.listdir("uploads") if f.startswith(file_id)]
+    matched_files = [f for f in os.listdir(UPLOAD_DIR) if f.startswith(file_id)]
     if not matched_files:
         raise HTTPException(status_code=404, detail="File not found")
         
-    file_path = os.path.join("uploads", matched_files[0])
+    file_path = os.path.join(UPLOAD_DIR, matched_files[0])
     display_filename = filename or matched_files[0]
     
     try:
@@ -83,7 +86,7 @@ async def analyze_document(file_id: str, filename: Optional[str] = Form(None)):
         # Fallback: Save to local JSON file
         try:
             import json
-            history_file = "history.json"
+            history_file = HISTORY_FILE
             local_history = []
             if os.path.exists(history_file):
                 with open(history_file, "r") as f:
@@ -119,7 +122,7 @@ async def get_history():
     if not history_data:
         try:
             import json
-            history_file = "history.json"
+            history_file = HISTORY_FILE
             if os.path.exists(history_file):
                 with open(history_file, "r") as f:
                     history_data = json.load(f)
